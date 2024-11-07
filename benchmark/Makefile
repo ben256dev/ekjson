@@ -19,7 +19,7 @@ CXXFLAGS:=$(CXXFLAGS) $(FLAGS) -std=c++11
 
 # Build the main executable
 $(OUT): $(OBJS) $(CXXOBJS)
-	$(CXX) $(LDFLAGS) $^ -o $@
+	$(CXX) $^ -o $@ $(LDFLAGS)
 	@if [[ $$(uname) == "Darwin" ]]; then\
 		install_name_tool -add_rpath $$PWD/jjson/lib $(OUT);\
 		install_name_tool -add_rpath $$PWD/json-c $(OUT);\
@@ -29,7 +29,7 @@ $(OUT): $(OBJS) $(CXXOBJS)
 define COMPILE
 $$(BUILD)/$(dir $(2))$(1)
 	mkdir -p $$(dir $$@)
-	$$(CC) $$(CFLAGS) -c $(2) -o $$@
+	$$(CC) -c $(2) $$(CFLAGS) -o $$@
 endef
 
 # Go through every source file use gcc to find its pre-reqs and create a rule
@@ -44,6 +44,18 @@ endef
 
 # Go through every source file use gcc to find its pre-reqs and create a rule
 $(foreach src,$(CXXSRCS),$(eval $(call CXXCOMPILE,$(shell $(CXX) $(CXXFLAGS) -M $(src) | tr -d '\\'),$(src))))
+
+# Build Dependencies
+dependencies:
+	@git submodule update --init --recurse
+	@cd jjson/
+	@cmake -DCMAKE_BUILD_TYPE="Release" .
+	@make
+	@cd ../json-c
+	@cmake .
+	@make
+	@cd ../
+	@make
 
 # Clean the project directory
 .PHONY: clean
