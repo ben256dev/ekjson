@@ -46,16 +46,14 @@ endef
 $(foreach src,$(CXXSRCS),$(eval $(call CXXCOMPILE,$(shell $(CXX) $(CXXFLAGS) -M $(src) | tr -d '\\'),$(src))))
 
 # Build Dependencies
+.PHONY: dependencies
 dependencies:
-	@git submodule update --init --recurse
-	@cd jjson/
-	@cmake -DCMAKE_BUILD_TYPE="Release" .
-	@make
-	@cd ../json-c
-	@cmake .
-	@make
-	@cd ../
-	@make
+	@echo "updating submodules recursively..."
+	@git submodule update --init --recursive
+	@echo "building jjson..."
+	@(cd jjson && cmake -DCMAKE_BUILD_TYPE="Release" . && make || exit 1)
+	@echo "building json-c..."
+	@(cd ../json-c && cmake . && make || exit 1)
 
 # Clean the project directory
 .PHONY: clean
